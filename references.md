@@ -1,4 +1,4 @@
-#Websites/Videos/Articles used when coding this project
+# Websites/Videos/Articles used when coding this project
 
 **W3 Schools**
 https://www.w3schools.com/
