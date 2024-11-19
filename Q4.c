@@ -2,9 +2,67 @@
 #include <stdio.h> //for input and output
 #include <string.h> //for string functions
 
+//(Fix so that it doesn't bug out if you enter more than 100 chars)
+int getFileNameInput(char *fileNameInput){
+    //Get file name input    
+    printf("Input file name to create (without .txt): ");
+    fgets(fileNameInput, 100, stdin); 
+    
+    //The fgets functions includes an enter (\n) so need to remove this
+    int fileNameInputLen;
+    for (int i=0; i<100;i++) {
+        if(fileNameInput[i] == 0){
+            fileNameInputLen = i-1;
+            break;
+        }        
+    }       
+    
+    for (int j=0; j<fileNameInputLen-1;j++){
+        fileNameInput[j] = fileNameInput[j];
+    }
+    fileNameInput[fileNameInputLen] = '\0';
+    return 0;
+}
+
+//General useful functions
+int fileExists(char *fileName){
+    FILE *testFile = fopen(fileName, "r");
+    if (testFile != NULL){        
+        fclose(testFile);
+        return 1;
+    }
+    else return 0;
+}
+
 //File operations
 
-int createFile(){}
+int createFile(){
+    
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
+
+    //Format file name
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+        
+    //Check if file exists
+    if (fileExists(fileName)){
+        printf("File already exists!\n");
+        return -1;
+    }
+    //Else...
+    FILE *f1 = fopen(fileName, "w");
+    if (f1 == NULL){
+        printf("Error with creating this file\n");
+        return -1;
+    }
+    printf("File successfully created!\n");
+    fclose(f1);
+    free(fileName);
+    return 0;
+}
 
 int copyFile(){
     /*char *fileInput = argv[1];
@@ -58,15 +116,11 @@ int showNumLines(){return 0;}
 //Write to a file
 //Something cooler?
 
-
-int main(){
-    printf("---GROUP 127 TEXT EDITOR---\n");
-    int input;
-    int finished = 0;
-    
+int options(){
     //Print options
-    printf("\nSelect option: (integer input)\n");
+    printf("\nOptions: (integer input)\n");
     
+    printf("101- Options\n");
     printf("0- Quit\n");
 
     printf("1- Create File\n");
@@ -84,20 +138,30 @@ int main(){
 
     printf("11- ?\n");
     printf("12- ?\n");
-    printf("\n");
+    printf("\n");}
+
+int main(){
+    printf("---GROUP 127 TEXT EDITOR---\n");
+    int input;
+    int finished = 0;
+    
+    options();
     
     while (!finished){
         
-        printf("--> ");
+        printf("Choose option--> ");
         char term;
         //scanf returns the number of successfully read items
         //a valid input must be an integer followed by an enter (\n)
         if(scanf("%d%c", &input, &term) != 2 || term != '\n'){
             printf("Input must be an integer. Exiting...\n");
             break;
-            }        
+            }
 
         switch(input){
+            case 101:
+                options();
+                break;
             case 0:
                 printf("Thank you!\n");
                 finished = 1;

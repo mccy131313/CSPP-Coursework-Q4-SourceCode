@@ -14,3 +14,7 @@ https://stackoverflow.com/
 for other specific queries or bug fixes
 *specifically:*
 	https://stackhttps://stackoverflow.com/questions/4072190/check-if-input-is-integer-type-in-c
+	
+**LEARNC**
+https://www.learnc.net/
+for general howto
