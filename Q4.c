@@ -8,8 +8,13 @@ int getFileNameInput(char *fileNameInput){
     printf("Input file name (without .txt): ");
     fgets(fileNameInput, 100, stdin); 
     
+    
     //The fgets functions includes an enter (\n) so need to remove this
-    int fileNameInputLen;
+    size_t lastChar = strlen(fileNameInput) - 1;
+    if (fileNameInput[lastChar] == '\n')
+        fileNameInput[lastChar] = '\0';
+    
+    /*int fileNameInputLen;
     for (int i=0; i<100;i++) {
         if(fileNameInput[i] == 0){
             fileNameInputLen = i-1;
@@ -20,7 +25,7 @@ int getFileNameInput(char *fileNameInput){
     for (int j=0; j<fileNameInputLen-1;j++){
         fileNameInput[j] = fileNameInput[j];
     }
-    fileNameInput[fileNameInputLen] = '\0';
+    fileNameInput[fileNameInputLen] = '\0';*/
     //The input is formatted as a string
     return 0;
 }
@@ -33,6 +38,113 @@ int fileExists(char *fileName){
         return 1;
     }
     else return 0;
+}
+
+void randomFileName(char randFileName[], int length){
+    char charset[] = "0123456789"
+                     "abcdefghijklmnopqrstuvwxyz"
+                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //10+26+26 = 62 characters
+    int i;
+    for(i=0;i<length;i++){
+        int index = rand() % 61;
+        randFileName[i] = charset[index];        
+    }
+
+}
+
+int getNumLines(char *fileName){
+    //Open file
+    FILE *f1 = fopen(fileName, "r");
+    if (f1 == NULL){
+        printf("Error with opening this file\n");
+        return -1;
+    } 
+
+    int numLines = 1;
+    int a;
+    a = fgetc(f1);
+    while(a!=EOF){
+        if(a=='\n') numLines++;
+        a=fgetc(f1);
+    }
+    
+    return numLines;
+}
+
+//Used when I need to delete a specified line number in a file
+int progDeleteLine(int lineNum, int numLines, FILE *filePointer, char *fileName){
+    
+    //Open temp file
+    int uniqueFile = 0;
+    int numForFile = 0;
+    char *tempFileName;
+    char randFileName[10];
+    //Keep generating a random file name until a unique file name is found
+    while(!uniqueFile){
+        //Format file name string
+        char randFileName[31];
+        randFileName[30] = '\0';
+        randomFileName(randFileName, 30);                
+        tempFileName = malloc(strlen("./") + strlen(randFileName) + strlen(".txt") + 1);
+        strcpy(tempFileName, "./");
+        strcat(tempFileName, randFileName);
+        strcat(tempFileName, ".txt");
+            
+        //Check if file exists
+        if (fileExists(tempFileName)){            
+            numForFile++;
+            free(tempFileName);            
+        }
+        else uniqueFile=1;
+    }
+    //Create the file
+    FILE *tempFile = fopen(tempFileName, "w");
+    if (tempFile == NULL){
+        printf("Error with opening this file\n");
+        return -1;
+    }     
+  
+    //Go through and copy file character by character
+    //copyOn flag indicates if you should copy or not based on the line number
+    int copyOn = 1;
+    if(lineNum==1) copyOn = 0;
+    int currentLine = 1;
+    int s;
+    s = fgetc(filePointer);    
+    while(s!=EOF){        
+        //printf("Line- %d\nChar- {%c}\n", currentLine, s);
+        //copyOn is 0 only for the selected linenumber
+        if(currentLine == lineNum){
+                copyOn = 0;
+            }
+            else {copyOn = 1;}        
+        //change the line number when new line
+        if(s=='\n'){
+            if(currentLine==lineNum-1 && lineNum==numLines){ //if its the last line and line selected is the last line
+                copyOn=0;
+            }
+            currentLine++;
+        }
+        //add the character is copyOn        
+        //printf("Copy on is %d\n\n", copyOn);
+        if(copyOn){            
+            fputc(s, tempFile);
+        }        
+        s=fgetc(filePointer);
+    }    
+    
+    //delete the old file
+    if(remove(fileName) != 0){
+        printf("Error with this method, sorry!!!\n");
+        free(tempFileName);
+        return -1;
+    }
+    
+    //rename the new one to the old name
+    rename(tempFileName, fileName);
+    fclose(tempFile);
+    free(tempFileName);
+    return 0;
 }
 
 //File operations
@@ -119,11 +231,11 @@ int copyFile(){
     }
     
     //Go through and copy file character by character
-    int c;
-    c = fgetc(fFROM);
-    while(c!=EOF){        
-        fputc(c, fTO);
-        c=fgetc(fFROM);
+    int s;
+    s = fgetc(fFROM);
+    while(s!=EOF){        
+        fputc(s, fTO);
+        s=fgetc(fFROM);
     }
 
     printf("File successfully copied!\n");
@@ -195,11 +307,11 @@ int showFile(){
     //Go through and print file character by character
     printf("\nHere is the file:\n");
     printf("--------------------------------\n");
-    int c;
-    c = fgetc(f1);
-    while(c!=EOF){        
-        printf("%c", c);
-        c=fgetc(f1);
+    int s;
+    s = fgetc(f1);
+    while(s!=EOF){        
+        printf("%c", s);
+        s=fgetc(f1);
     }
     printf("\n");
     printf("--------------------------------\n");    
@@ -212,9 +324,131 @@ int showFile(){
 
 //Line operations
 
-int appendLine(){return 0;}
+int appendLine(){
+    //Get file name input
+    printf("Appending inputted line of contents to inputted file name...\n");
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
 
-int deleteLine(){return 0;}
+    //Format file name string
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+        
+    //Check if file exists
+    if (!fileExists(fileName)){
+        printf("File doesn't exist!\n");
+        free(fileName);
+        return -1;
+    }
+    
+    //Open file
+    FILE *f1 = fopen(fileName, "a");
+    if (f1 == NULL){
+        printf("Error with opening this file\n");
+        free(fileName);
+        return -1;
+    }
+
+    //add inputted line
+    char inputContents[300];
+    printf("Input line you would like to add (max 300 chars):\n");
+    printf("--> ");    
+    fgets(inputContents, 300, stdin);
+    
+    //The fgets functions includes an enter (\n) so need to remove this
+    size_t lastChar = strlen(inputContents) - 1;
+    if (inputContents[lastChar] == '\n')
+        inputContents[lastChar] = '\0';
+
+    fprintf(f1, "\n%s", inputContents);    
+    printf("Line successfully appended to file!\n");    
+    fclose(f1);
+    free(fileName);
+    return 0;
+}
+
+int deleteLine(){ 
+    //Get file name input
+    printf("Deleting inputted line of contents from inputted file name...\n");
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
+
+    //Format file name string
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+        
+    //Check if file exists
+    if (!fileExists(fileName)){
+        printf("File doesn't exist!\n");
+        free(fileName);
+        return -1;
+    }
+    
+    //Open file
+    FILE *f1 = fopen(fileName, "r");
+    if (f1 == NULL){
+        printf("Error with opening this file\n");
+        free(fileName);
+        return -1;
+    }    
+    //Get input for line number and check it is valid
+    int validLine = 0;
+    int lineNum;
+    char input[50];
+    int numLines = getNumLines(fileName);
+    if(numLines==-1) {
+        printf("Error opening this file\n");
+        free(fileName);
+        fclose(f1);
+        return -1;
+    }
+
+    while(!validLine){
+        //GET INPUT
+        printf("Enter line number to delete: ");
+        fgets(input, 50, stdin); 
+        //The fgets functions includes an enter (\n) so need to remove this
+        int inputLen;
+        for (int i=0; i<50;i++) {
+            if(input[i] == 0){
+                inputLen = i-1;
+                break;
+            }        
+        }       
+        
+        for (int j=0; j<inputLen-1;j++){
+            input[j] = input[j];
+        }
+                
+        //convert input to integer
+        if(*input=='0'){
+            printf("Not a valid line number.\n\n");            
+        }
+        else{
+            lineNum=atoi(input);
+            if (lineNum==0){
+                    printf("Invalid input entered. Must be an integer.\n\n");
+            }        
+            else{ //input is an integer but is it valid?
+                if(!(lineNum > 0 && lineNum <= numLines)){
+                    printf("Not a valid line number.\n\n");
+                }
+                else validLine=1;
+
+            }
+        }
+    }    
+
+    progDeleteLine(lineNum, numLines, f1, fileName);
+    printf("Line successfully deleted!\n");
+    fclose(f1);
+    free(fileName);
+    return 0;    
+}
 
 int insertLine(){return 0;}
 
