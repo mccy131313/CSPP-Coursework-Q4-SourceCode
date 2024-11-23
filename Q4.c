@@ -147,6 +147,84 @@ int progDeleteLine(int lineNum, int numLines, FILE *filePointer, char *fileName)
     return 0;
 }
 
+//Used when I need to delete a specified line number in a file
+int progInsertLine(int lineNum, int numLines, FILE *filePointer, char *fileName, char *insertString){
+    
+    //Open temp file
+    int uniqueFile = 0;
+    int numForFile = 0;
+    char *tempFileName;
+    char randFileName[10];
+    //Keep generating a random file name until a unique file name is found
+    while(!uniqueFile){
+        //Format file name string
+        char randFileName[31];
+        randFileName[30] = '\0';
+        randomFileName(randFileName, 30);                
+        tempFileName = malloc(strlen("./") + strlen(randFileName) + strlen(".txt") + 1);
+        strcpy(tempFileName, "./");
+        strcat(tempFileName, randFileName);
+        strcat(tempFileName, ".txt");
+            
+        //Check if file exists
+        if (fileExists(tempFileName)){            
+            numForFile++;
+            free(tempFileName);            
+        }
+        else uniqueFile=1;
+    }
+    //Create the file
+    FILE *tempFile = fopen(tempFileName, "w");
+    if (tempFile == NULL){
+        printf("Error with opening this file\n");
+        return -1;
+    }     
+  
+
+    //get length of the inputted string
+    int inputLen = 0;
+    int i = 0;
+    while (insertString[i] != '\0') {
+        inputLen++;
+        i++;
+    }
+
+    //Go through and copy file character by character
+    //Insert new line when you reach it
+    int currentLine = 1;
+    int s;
+    s = fgetc(filePointer);    
+    while(s!=EOF){        
+        if(currentLine==lineNum){
+            int k;
+            for(k=0;k<inputLen;k++){
+                fputc(insertString[k], tempFile);                
+            }
+            fputc('\n', tempFile);
+            currentLine++;
+        }
+        //change the line number when new line
+        if(s=='\n'){
+            currentLine++;
+        }
+        fputc(s, tempFile);
+        s=fgetc(filePointer);
+    }  
+    
+    //delete the old file
+    if(remove(fileName) != 0){
+        printf("Error with this method, sorry!!!\n");
+        free(tempFileName);
+        return -1;
+    }
+    
+    //rename the new one to the old name
+    rename(tempFileName, fileName);
+    fclose(tempFile);
+    free(tempFileName);
+    return 0;
+}
+
 //File operations
 
 int createFile(){
@@ -394,7 +472,7 @@ int deleteLine(){
         printf("Error with opening this file\n");
         free(fileName);
         return -1;
-    }    
+    }
     //Get input for line number and check it is valid
     int validLine = 0;
     int lineNum;
@@ -411,18 +489,11 @@ int deleteLine(){
         //GET INPUT
         printf("Enter line number to delete: ");
         fgets(input, 50, stdin); 
-        //The fgets functions includes an enter (\n) so need to remove this
-        int inputLen;
-        for (int i=0; i<50;i++) {
-            if(input[i] == 0){
-                inputLen = i-1;
-                break;
-            }        
-        }       
         
-        for (int j=0; j<inputLen-1;j++){
-            input[j] = input[j];
-        }
+        //The fgets functions includes an enter (\n) so need to remove this
+        size_t lastChar = strlen(input) - 1;
+        if (input[lastChar] == '\n')
+            input[lastChar] = '\0';
                 
         //convert input to integer
         if(*input=='0'){
@@ -441,7 +512,7 @@ int deleteLine(){
 
             }
         }
-    }    
+    }
 
     progDeleteLine(lineNum, numLines, f1, fileName);
     printf("Line successfully deleted!\n");
@@ -450,7 +521,92 @@ int deleteLine(){
     return 0;    
 }
 
-int insertLine(){return 0;}
+int insertLine(){
+    //Get file name input
+    printf("Inserting line of contents into inputted file name...\n");
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
+
+    //Format file name string
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+        
+    //Check if file exists
+    if (!fileExists(fileName)){
+        printf("File doesn't exist!\n");
+        free(fileName);
+        return -1;
+    }
+    
+    //Open file
+    FILE *f1 = fopen(fileName, "rw");
+    if (f1 == NULL){
+        printf("Error with opening this file\n");
+        free(fileName);
+        return -1;
+    }
+
+    //Get input for line number and check it is valid
+    int validLine = 0;
+    int lineNum;
+    char input[50];
+    int numLines = getNumLines(fileName);
+    if(numLines==-1) {
+        printf("Error opening this file\n");
+        free(fileName);
+        fclose(f1);
+        return -1;
+    }
+    
+    while(!validLine){
+        //GET INPUT
+        printf("Enter line number to insert at: ");
+        fgets(input, 50, stdin); 
+        
+        //The fgets functions includes an enter (\n) so need to remove this
+        size_t lastChar = strlen(input) - 1;
+        if (input[lastChar] == '\n')
+            input[lastChar] = '\0';
+                
+        //convert input to integer
+        if(*input=='0'){
+            printf("Not a valid line number.\n\n");            
+        }
+        else{
+            lineNum=atoi(input);
+            if (lineNum==0){
+                    printf("Invalid input entered. Must be an integer.\n\n");
+            }        
+            else{ //input is an integer but is it valid?
+                if(!(lineNum > 0 && lineNum <= numLines)){
+                    printf("Not a valid line number.\n\n");
+                }
+                else validLine=1;
+
+            }
+        }
+    }
+
+    //add inputted line
+    char insertString[300];
+    printf("Input line you would like to insert (max 300 chars):\n");
+    printf("--> ");    
+    fgets(insertString, 300, stdin);
+    
+    //The fgets functions includes an enter (\n) so need to remove this
+    size_t lastChar = strlen(insertString) - 1;
+    if (insertString[lastChar] == '\n')
+        insertString[lastChar] = '\0';
+    
+    
+    progInsertLine(lineNum, numLines, f1, fileName, insertString);
+    printf("Line successfully inserted!\n");
+    fclose(f1);
+    free(fileName);
+    return 0;    
+}
 
 int showLine(){return 0;}
 

@@ -26,3 +26,8 @@ for general howto
 **Island Class**
 https://islandclass.org/2020/05/14/checking-for-integers-c-code/
 for atoi()
+
+**CROWDSTRIKE**
+https://www.crowdstrike.com/en-us/cybersecurity-101/next-gen-siem/log-file-formats/?srsltid=AfmBOooaycx7vEuZti24hjg05KM-6fW1mi_zHJLRAYk8mpjpMpTNZ13O
+for research into log files and format
+
