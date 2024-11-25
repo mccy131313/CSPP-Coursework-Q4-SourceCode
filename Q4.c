@@ -2,6 +2,7 @@
 #include <stdio.h> //for input and output
 #include <string.h> //for string functions
 #include <time.h> //for getting current datetime
+#include <dirent.h> //for reading files in directories
 
 //(Fix so that it doesn't bug out if you enter more than 100 chars)
 int getFileNameInput(char *fileNameInput){
@@ -103,7 +104,7 @@ int progDeleteLine(int lineNum, int numLines, FILE *filePointer, char *fileName)
     if (tempFile == NULL){
         printf("Error with opening this file\n");
         return -1;
-    }     
+    }
   
     //Go through and copy file character by character
     //copyOn flag indicates if you should copy or not based on the line number
@@ -371,7 +372,7 @@ int copyFile(){
     
     char *operation = malloc(strlen("Copy File to new file: ") + strlen(realFileName) + 1);
     strcpy(operation, "Copy File to new file: ");
-    strcat(operation, realFileName);    
+    strcat(operation, realFileName);
 
     writeChangeLog(fileNameFROM, operation, getNumLines(fileNameFROM));
 
@@ -861,10 +862,89 @@ int showNumLines(){
 }
 
 //Additional features
-//Word count, Char count
-//Rename file
-//Show current text files in dir!!
-//Something cooler?
+int renameFile(){
+    //Get to and from file name input
+    printf("File to RENAME\n");
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
+    
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+
+    if (!fileExists(fileName)){
+        printf("File does not exist!\n");        
+        free(fileName);
+        return -1;
+    }
+        
+    printf("NEW file name\n");
+    char newFileNameInput[100];
+    getFileNameInput(newFileNameInput);
+        
+    char *newFileName = malloc(strlen("./") + strlen(newFileNameInput) + strlen(".txt") + 1);
+    strcpy(newFileName, "./");
+    strcat(newFileName, newFileNameInput);
+    strcat(newFileName, ".txt");
+    
+    if(fileExists(newFileName)){
+        printf("File already exists!\n");
+        free(fileName);
+        free(newFileName);
+        return -1;
+    }
+
+    rename(fileName, newFileName);
+    printf("File renamed successfully!\n");
+
+    //format newFileName to remove ./ at the start
+    char *realNewFileName = newFileName;
+    strncpy(realNewFileName,newFileName+2,strlen(newFileName)-1);
+
+    char *operation = malloc(strlen("Rename to ") + strlen(realNewFileName) + 1);
+    strcpy(operation, "Rename to ");
+    strcat(operation, realNewFileName);
+
+    writeChangeLog(fileName, operation, getNumLines(realNewFileName));
+
+    free(operation);
+    return 0;
+}
+
+int listTextFiles() {
+    printf("List of text files in current directory:\n");
+    
+    DIR *dir = opendir("./"); //pointer to current directory
+    struct dirent *dirEntries; //struct to hold directory entries    
+    
+    if (dir == NULL) {
+        printf("Error opening directory\n");
+        return -1;
+    }
+   
+    //loop through all each dir entry
+    while ((dirEntries = readdir(dir)) != NULL) {
+                
+        int nameLen = strlen((*dirEntries).d_name);
+
+        if(nameLen > 4){
+            //check file ends in .txt
+            if(strncmp((*dirEntries).d_name + nameLen - 4, ".txt", 4) == 0) {
+                printf("-%s\n", (*dirEntries).d_name);
+            }
+        }    
+    }
+
+    // Close the directory
+    if (closedir(dir) != 0) {
+        printf("Error closing directory\n");
+        return -1;
+    }
+
+    return 0;
+}
+
 
 int options(){
     //Print options
@@ -886,8 +966,8 @@ int options(){
     printf("9- Show Change Log\n");
     printf("10- Show Number of Lines\n");
 
-    printf("11- ?\n");
-    printf("12- ?\n");
+    printf("11- Rename File\n");
+    printf("12- List Text Files\n");
     }
 
 int main(){
@@ -960,10 +1040,10 @@ int main(){
                 showNumLines();
                 break;
             case 11:
-                printf("Extra feature 1\n");
+                renameFile();
                 break;
             case 12:
-                printf("Extra feature 2\n");
+                listTextFiles();
                 break;
             default:
                 printf("Not a valid option, try again\n");
