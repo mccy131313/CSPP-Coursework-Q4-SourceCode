@@ -18,6 +18,7 @@ for other specific queries or bug fixes
 	---include that there are 62^30 combinations of strings for potential filenames and if they are all occupied,
 	the program will be in an endless loop!
 	https://stackoverflow.com/questions/13443793/fgets-includes-the-newline-at-the-end
+	https://stackoverflow.com/questions/1442116/how-to-get-the-date-and-time-values-in-a-c-program
 	
 **LEARNC**
 https://www.learnc.net/

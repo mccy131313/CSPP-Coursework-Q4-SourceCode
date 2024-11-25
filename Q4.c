@@ -1,6 +1,7 @@
 #include <stdlib.h> //for memory allocation
 #include <stdio.h> //for input and output
 #include <string.h> //for string functions
+#include <time.h> //for getting current datetime
 
 //(Fix so that it doesn't bug out if you enter more than 100 chars)
 int getFileNameInput(char *fileNameInput){
@@ -234,6 +235,37 @@ int progInsertLine(int lineNum, int numLines, FILE *filePointer, char *fileName,
     return 0;
 }
 
+//Used after each operation to write to changelog.log
+int writeChangeLog(char* fileName, char *operation, int numLines){
+    //Open file
+    FILE *changelog = fopen("./changelog.log", "a");
+    if (changelog == NULL){
+        printf("Error with opening change log\n");
+        return -1;
+    }       
+    //Get datetime
+    time_t t = time(NULL); //gets the raw time (seconds since Jan 1 1970)
+    struct tm tm = *localtime(&t); //creates a structure which correctly formats the raw time
+    int day = tm.tm_mday;
+    int month = tm.tm_mon + 1; //month num begins at 0
+    int year = tm.tm_year + 1900; //counts years since 1900
+    int hour = tm.tm_hour;
+    int min = tm.tm_min;
+    int sec = tm.tm_sec;    
+    char *datetime = malloc(72 + 1);
+    sprintf(datetime, "%02d/%02d/%d %02d:%02d:%02d", day, month, year, hour, min, sec);    
+
+    //format fileName to remove ./ at the start
+    char *realFileName = fileName;
+    strncpy(realFileName,fileName+2,strlen(fileName)-1);
+
+    fprintf(changelog, "\n\n%s | %s | %s | %d", datetime, fileName, operation, numLines);
+
+    fclose(changelog);
+    free(datetime);
+    return 0;
+}
+
 //File operations
 
 int createFile(){
@@ -262,6 +294,10 @@ int createFile(){
         free(fileName);
         return -1;
     }
+    
+    char operation[] = "Create File";
+    writeChangeLog(fileName, operation, getNumLines(fileName));
+    
     printf("File successfully created!\n");
     fclose(f1);
     free(fileName);
@@ -325,11 +361,22 @@ int copyFile(){
         s=fgetc(fFROM);
     }
 
+    //format fileName to remove ./ at the start
+    char *realFileName = fileNameTO;
+    strncpy(realFileName,fileNameTO+2,strlen(fileNameTO)-1);
+        
+    char *operation = malloc(strlen("Copy File to new file: ") + strlen(realFileName) + 1);
+    strcpy(operation, "Copy File to new file: ");
+    strcat(operation, realFileName);    
+
+    writeChangeLog(fileNameFROM, operation, getNumLines(fileNameFROM));
+
     printf("File successfully copied!\n");
     fclose(fFROM);
     fclose(fTO);
+    free(operation);
     free(fileNameFROM);
-    free(fileNameTO);    
+    free(fileNameTO);
     return 0;
 }
 
@@ -393,7 +440,7 @@ int showFile(){
     
     //Go through and print file character by character
     printf("\nHere is the file:\n");
-    printf("--------------------------------\n");
+    printf("----------------------------------------------------------------\n");
     int s;
     s = fgetc(f1);
     while(s!=EOF){        
@@ -401,7 +448,7 @@ int showFile(){
         s=fgetc(f1);
     }
     printf("\n");
-    printf("--------------------------------\n");    
+    printf("----------------------------------------------------------------\n");    
     
     printf("File successfully displayed!\n");
     fclose(f1);
@@ -720,7 +767,7 @@ int showChangeLog(){
     
     //Go through and print file character by character
     printf("\nHere is the change log:\n");
-    printf("--------------------------------\n");
+    printf("----------------------------------------------------------------\n");
     int s;
     s = fgetc(f1);
     while(s!=EOF){        
@@ -728,7 +775,7 @@ int showChangeLog(){
         s=fgetc(f1);
     }
     printf("\n");
-    printf("--------------------------------\n");    
+    printf("----------------------------------------------------------------\n");
 
     fclose(f1);
     return 0;
@@ -817,7 +864,20 @@ int main(){
     int finished = 0;
     
     options();
-    
+
+    //create changelog file
+    if(!fileExists("./changelog.log")){
+        FILE *changelog = fopen("./changelog.log", "w");
+        if (changelog == NULL){
+            printf("Error with creating the change log\n");
+            return -1;
+        }
+        else{
+            fprintf(changelog, "CHANGE LOG\nFORMAT: <datetime> | <filename> | <operation> | <numlines>");
+        }
+        fclose(changelog);
+    }    
+
     while (!finished){
         
         printf("\nChoose option--> ");
