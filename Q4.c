@@ -295,11 +295,12 @@ int createFile(){
         return -1;
     }
     
+    fclose(f1);
+
     char operation[] = "Create File";
     writeChangeLog(fileName, operation, getNumLines(fileName));
     
-    printf("File successfully created!\n");
-    fclose(f1);
+    printf("File successfully created!\n");    
     free(fileName);
     return 0;
 }
@@ -361,19 +362,20 @@ int copyFile(){
         s=fgetc(fFROM);
     }
 
+    fclose(fFROM);
+    fclose(fTO);
+
     //format fileName to remove ./ at the start
     char *realFileName = fileNameTO;
     strncpy(realFileName,fileNameTO+2,strlen(fileNameTO)-1);
-        
+    
     char *operation = malloc(strlen("Copy File to new file: ") + strlen(realFileName) + 1);
     strcpy(operation, "Copy File to new file: ");
     strcat(operation, realFileName);    
 
     writeChangeLog(fileNameFROM, operation, getNumLines(fileNameFROM));
 
-    printf("File successfully copied!\n");
-    fclose(fFROM);
-    fclose(fTO);
+    printf("File successfully copied!\n");    
     free(operation);
     free(fileNameFROM);
     free(fileNameTO);
@@ -400,7 +402,9 @@ int deleteFile(){
     }
     
     if (remove(fileName) == 0){
-        printf("File successfully deleted!\n");
+        printf("File successfully deleted!\n");        
+        char operation[] = "Delete File";
+        writeChangeLog(fileName, operation, 0);
         free(fileName);
         return 0;
     }
@@ -497,8 +501,12 @@ int appendLine(){
         inputContents[lastChar] = '\0';
 
     fprintf(f1, "\n%s", inputContents);    
-    printf("Line successfully appended to file!\n");    
     fclose(f1);
+    
+    char operation[] = "Append Line";
+    writeChangeLog(fileName, operation, getNumLines(fileName));
+
+    printf("Line successfully appended to file!\n");        
     free(fileName);
     return 0;
 }
@@ -570,14 +578,25 @@ int deleteLine(){
         }
     }
 
-    progDeleteLine(lineNum, numLines, f1, fileName);
-    printf("Line successfully deleted!\n");
+    progDeleteLine(lineNum, numLines, f1, fileName);    
     fclose(f1);
+
+    char *lineNumStr = malloc(strlen(input) + 1);
+    sprintf(lineNumStr,"%d", lineNum);
+
+    char *operation = malloc(strlen("Delete Line ") + strlen(lineNumStr) + 1);
+    strcpy(operation, "Delete Line ");
+    strcat(operation, lineNumStr);
+
+    writeChangeLog(fileName, operation, getNumLines(fileName));
+    
+    printf("Line successfully deleted!\n");
+    free(lineNumStr);
     free(fileName);
+    free(operation);
     return 0;    
 }
 
-//FIX, doesn't work in empty file?
 int insertLine(){
     //Get file name input
     printf("Inserting line of contents into inputted file name...\n");
@@ -660,6 +679,19 @@ int insertLine(){
     progInsertLine(lineNum, numLines, f1, fileName, insertString);
     printf("Line successfully inserted!\n");
     fclose(f1);
+
+    //Add to changelog
+    char *lineNumStr = malloc(strlen(input) + 1);
+    sprintf(lineNumStr,"%d", lineNum);
+    
+    char *operation = malloc(strlen("Insert Line at line ") + strlen(lineNumStr) + 1);
+    strcpy(operation, "Insert Line at line ");
+    strcat(operation, lineNumStr);
+
+    writeChangeLog(fileName, operation, getNumLines(fileName));
+
+    free(lineNumStr);
+    free(operation);
     free(fileName);
     return 0;
 }
