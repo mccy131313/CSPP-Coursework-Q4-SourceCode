@@ -193,24 +193,33 @@ int progInsertLine(int lineNum, int numLines, FILE *filePointer, char *fileName,
     //Insert new line when you reach it
     int currentLine = 1;
     int s;
-    s = fgetc(filePointer);    
-    while(s!=EOF){        
-        if(currentLine==lineNum){
-            int k;
+    s = fgetc(filePointer);        
+    //if file is empty
+    if (s==EOF){
+        int k;
             for(k=0;k<inputLen;k++){
                 fputc(insertString[k], tempFile);                
             }
             fputc('\n', tempFile);
-            currentLine++;
-        }
-        //change the line number when new line
-        if(s=='\n'){
-            currentLine++;
-        }
-        fputc(s, tempFile);
-        s=fgetc(filePointer);
-    }  
-    
+    }
+    else{
+        while(s!=EOF){            
+            if(currentLine==lineNum){            
+                int k;
+                for(k=0;k<inputLen;k++){
+                    fputc(insertString[k], tempFile);                
+                }
+                fputc('\n', tempFile);
+                currentLine++;
+            }
+            //change the line number when new line
+            if(s=='\n'){
+                currentLine++;
+            }
+            fputc(s, tempFile);
+            s=fgetc(filePointer);
+        }  
+    }
     //delete the old file
     if(remove(fileName) != 0){
         printf("Error with this method, sorry!!!\n");
@@ -521,6 +530,7 @@ int deleteLine(){
     return 0;    
 }
 
+//FIX, doesn't work in empty file?
 int insertLine(){
     //Get file name input
     printf("Inserting line of contents into inputted file name...\n");
@@ -599,28 +609,182 @@ int insertLine(){
     size_t lastChar = strlen(insertString) - 1;
     if (insertString[lastChar] == '\n')
         insertString[lastChar] = '\0';
-    
-    
+            
     progInsertLine(lineNum, numLines, f1, fileName, insertString);
     printf("Line successfully inserted!\n");
     fclose(f1);
     free(fileName);
-    return 0;    
+    return 0;
 }
 
-int showLine(){return 0;}
+int showLine(){
+    //Get file name input
+    printf("Outputting line of contents from inputted file name...\n");
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
+
+    //Format file name string
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+        
+    //Check if file exists
+    if (!fileExists(fileName)){
+        printf("File doesn't exist!\n");
+        free(fileName);
+        return -1;
+    }
+    
+    //Open file
+    FILE *f1 = fopen(fileName, "r");
+    if (f1 == NULL){
+        printf("Error with opening this file\n");
+        free(fileName);
+        return -1;
+    }
+
+    //Get input for line number and check it is valid
+    int validLine = 0;
+    int lineNum;
+    char input[50];
+    int numLines = getNumLines(fileName);
+    if(numLines==-1) {
+        printf("Error opening this file\n");
+        free(fileName);
+        fclose(f1);
+        return -1;
+    }
+    
+    while(!validLine){
+        //GET INPUT
+        printf("Enter line number to show: ");
+        fgets(input, 50, stdin); 
+        
+        //The fgets functions includes an enter (\n) so need to remove this
+        size_t lastChar = strlen(input) - 1;
+        if (input[lastChar] == '\n')
+            input[lastChar] = '\0';
+                
+        //convert input to integer
+        if(*input=='0'){
+            printf("Not a valid line number.\n\n");            
+        }
+        else{
+            lineNum=atoi(input);
+            if (lineNum==0){
+                    printf("Invalid input entered. Must be an integer.\n\n");
+            }        
+            else{ //input is an integer but is it valid?
+                if(!(lineNum > 0 && lineNum <= numLines)){
+                    printf("Not a valid line number.\n\n");
+                }
+                else validLine=1;
+
+            }
+        }
+    }
+
+    //Go through and copy file character by character
+    //Insert new line when you reach it
+    int currentLine = 1;
+    int s;
+    s = fgetc(f1);
+    printf("Line %d: ", lineNum);
+    while(s!=EOF){        
+        if (currentLine==lineNum){
+            if(s!='\n') printf("%c", s);
+        }
+        //change the line number when new line
+        if(s=='\n'){
+            currentLine++;
+        }        
+        s=fgetc(f1);
+    }
+    printf("\n");
+   
+    fclose(f1);
+    free(fileName);
+    return 0;
+}
 
 //General operations
 
-int showChangeLog(){return 0;}
+int showChangeLog(){
+    //Open file
+    FILE *f1 = fopen("./changelog.log", "r");
+    if (f1 == NULL){
+        printf("Error with opening change log\n");        
+        return -1;
+    }
+    
+    //Go through and print file character by character
+    printf("\nHere is the change log:\n");
+    printf("--------------------------------\n");
+    int s;
+    s = fgetc(f1);
+    while(s!=EOF){        
+        printf("%c", s);
+        s=fgetc(f1);
+    }
+    printf("\n");
+    printf("--------------------------------\n");    
 
-int showNumLines(){return 0;}
+    fclose(f1);
+    return 0;
+}
+
+int showNumLines(){
+    //Get file name input
+    printf("Displaying number of lines in specified file...\n");
+    char fileNameInput[100];
+    getFileNameInput(fileNameInput);
+
+    //Format file name string
+    char *fileName = malloc(strlen("./") + strlen(fileNameInput) + strlen(".txt") + 1);
+    strcpy(fileName, "./");
+    strcat(fileName, fileNameInput);
+    strcat(fileName, ".txt");
+        
+    //Check if file exists
+    if (!fileExists(fileName)){
+        printf("File doesn't exist!\n");
+        free(fileName);
+        return -1;
+    }
+    
+    //Open file
+    FILE *f1 = fopen(fileName, "r");
+    if (f1 == NULL){
+        printf("Error with opening this file\n");
+        free(fileName);
+        return -1;
+    }
+        
+    //Go through and copy file character by character
+    //Insert new line when you reach it
+    int currentLine = 1;
+    int s;
+    s = fgetc(f1);    
+    while(s!=EOF){
+        if(s=='\n'){
+            currentLine++;
+        }        
+        s=fgetc(f1);
+    }
+    
+    printf("Number of lines: %d\n", currentLine);
+
+    fclose(f1);
+    free(fileName);
+    return 0;
+
+}
 
 //Additional features
 //Word count, Char count
 //Rename file
-//Write to a file
-//Show current text files in dir
+//Show current text files in dir!!
 //Something cooler?
 
 int options(){
