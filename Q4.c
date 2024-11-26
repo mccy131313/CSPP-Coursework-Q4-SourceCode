@@ -7,28 +7,26 @@
 //(Fix so that it doesn't bug out if you enter more than 100 chars)
 int getFileNameInput(char *fileNameInput){
     //Get file name input    
-    printf("Input file name (without .txt): ");
-    fgets(fileNameInput, 100, stdin); 
-    
-    
-    //The fgets functions includes an enter (\n) so need to remove this
-    size_t lastChar = strlen(fileNameInput) - 1;
-    if (fileNameInput[lastChar] == '\n')
-        fileNameInput[lastChar] = '\0';
-    
-    /*int fileNameInputLen;
-    for (int i=0; i<100;i++) {
-        if(fileNameInput[i] == 0){
-            fileNameInputLen = i-1;
-            break;
+    int validInput = 0;
+    while(!validInput){
+        
+        printf("Input file name (without .txt): ");
+        fgets(fileNameInput, 100, stdin);
+        
+        //The fgets functions includes an enter (\n) so need to remove this
+        size_t lastChar = strlen(fileNameInput) - 1;
+        if (fileNameInput[lastChar] == '\n')
+            fileNameInput[lastChar] = '\0';
+        
+        if(strlen(fileNameInput)>=99){
+            printf("Input is max 98 chars!\n");            
+            while (getchar() != '\n');
         }        
-    }       
+        else validInput=1;
+    }            
     
-    for (int j=0; j<fileNameInputLen-1;j++){
-        fileNameInput[j] = fileNameInput[j];
-    }
-    fileNameInput[fileNameInputLen] = '\0';*/
-    //The input is formatted as a string
+    
+    
     return 0;
 }
 
@@ -972,7 +970,7 @@ int options(){
 
 int main(){
     printf("---GROUP 127 TEXT EDITOR---\n");
-    int input;
+    //int input;
     int finished = 0;
     
     options();
@@ -992,14 +990,32 @@ int main(){
 
     while (!finished){
         
-        printf("\nChoose option--> ");
-        char term;
-        //scanf returns the number of successfully read items
-        //a valid input must be an integer followed by an enter (\n)
-        if(scanf("%d%c", &input, &term) != 2 || term != '\n'){
-            printf("Input must be an integer. Exiting...\n");
-            break;
+        int validInput = 0;
+        char rawInput[50];
+        int input;
+        while(!validInput){
+            //GET INPUT
+            printf("\nChoose option--> ");
+            fgets(rawInput, 50, stdin);
+            
+            //The fgets functions includes an enter (\n) so need to remove this
+            size_t lastChar = strlen(rawInput) - 1;
+            if (rawInput[lastChar] == '\n')
+                rawInput[lastChar] = '\0';
+                    
+            //convert input to integer
+            if(*rawInput=='0'){
+                input=0;
+                validInput=1;
             }
+            else{
+                input=atoi(rawInput);
+                if (input==0){
+                    printf("Invalid input entered. Must be an integer.\n");
+                }        
+                else validInput=1;
+            }
+        }
 
         switch(input){
             case 101:

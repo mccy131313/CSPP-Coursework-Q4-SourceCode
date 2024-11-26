@@ -20,6 +20,7 @@ for other specific queries or bug fixes
 	https://stackoverflow.com/questions/13443793/fgets-includes-the-newline-at-the-end
 	https://stackoverflow.com/questions/1442116/how-to-get-the-date-and-time-values-in-a-c-program
 	https://stackoverflow.com/questions/30216643/how-to-list-all-the-txt-files-in-the-current-directory
+	https://stackoverflow.com/questions/7898215/how-can-i-clear-an-input-buffer-in-c
 	
 **LEARNC**
 https://www.learnc.net/
