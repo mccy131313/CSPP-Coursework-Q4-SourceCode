@@ -183,10 +183,11 @@ int progInsertLine(int lineNum, int numLines, FILE *filePointer, char *fileName,
     //Go through and copy file character by character
     //Insert new line when you reach it
     int currentLine = 1;
+    int lineInserted = 0; //boolean to test if the line has been inserted
     int s;
     s = fgetc(filePointer);        
     //if file is empty, just insert line
-    if (s==EOF){
+    if (s==EOF){        
         int k;
         for(k=0;k<inputLen;k++){
             fputc(insertString[k], tempFile);                
@@ -194,12 +195,13 @@ int progInsertLine(int lineNum, int numLines, FILE *filePointer, char *fileName,
         fputc('\n', tempFile);
     }
     else{
-        while(s!=EOF){            
+        while(s!=EOF){
             if(currentLine==lineNum){            
-                //insert line when lineNum is reached
+                //insert line when lineNum is reached                
+                lineInserted=1;
                 int k;
                 for(k=0;k<inputLen;k++){
-                    fputc(insertString[k], tempFile);                
+                    fputc(insertString[k], tempFile);
                 }
                 fputc('\n', tempFile);
                 currentLine++;
@@ -210,7 +212,14 @@ int progInsertLine(int lineNum, int numLines, FILE *filePointer, char *fileName,
             }
             fputc(s, tempFile);
             s=fgetc(filePointer);
-        }  
+        }
+        if(!lineInserted){ //to catch error if the user tries to insert on the last line but that line is empty
+            int k;
+            for(k=0;k<inputLen;k++){
+                fputc(insertString[k], tempFile);
+            }
+            fputc('\n', tempFile);
+        }
     }
     
     //delete the old file
